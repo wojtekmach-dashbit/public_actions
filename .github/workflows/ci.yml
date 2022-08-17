@@ -10,7 +10,10 @@ on:
         type: string
 jobs:
   build-macos:
-    runs-on: self-hosted
+    strategy:
+      matrix:
+        runner: [self-hosted]
+    runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v3
 
