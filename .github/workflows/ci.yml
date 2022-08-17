@@ -16,7 +16,7 @@ jobs:
 
       - name: Cache wxWidgets
         id: wxwidgets-cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: wxWidgets
           key: wxWidgets-${{ inputs.wxwidgets_version }}-${{ runner.os }}-${{ runner.arch }}
@@ -44,7 +44,15 @@ jobs:
           export PATH="$PWD/wxWidgets/release/bin:$PATH"
           wx-config --libs
 
+      - name: Cache OTP
+        id: otp-cache
+        uses: actions/cache@v3
+        with:
+          path: otp
+          key: otp-${{ inputs.otp_version }}-${{ runner.os }}-${{ runner.arch }}
+
       - name: Build OTP
+        if: steps.otp-cache.outputs.cache-hit != 'true'
         run: |
           export PATH="$PWD/wxWidgets/release/bin:$PATH"
           export MAKEFLAGS=-j$(getconf _NPROCESSORS_ONLN)
@@ -75,7 +83,7 @@ jobs:
           ./bin/erl -noshell -eval '{wx_ref,_,_,_} = wx:new(), io:format("wx ok~n"), halt().'
 
       - name: Upload OTP tarball
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: otp_macos_${{ runner.arch }}
           path: otp.tar.gz
