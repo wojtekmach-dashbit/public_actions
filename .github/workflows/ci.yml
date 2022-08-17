@@ -1,92 +1,9 @@
 name: CI
 on:
-  workflow_call:
-    inputs:
-      wxwidgets_version:
-        required: true
-        type: string
-      otp_version:
-        required: true
-        type: string
+  push:
 jobs:
-  build-macos:
-    strategy:
-      matrix:
-        runner: [self-hosted, macos-12]
-    runs-on: ${{ matrix.runner }}
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Cache wxWidgets
-        id: wxwidgets-cache
-        uses: actions/cache@v3
-        with:
-          path: wxWidgets
-          key: wxWidgets-${{ inputs.wxwidgets_version }}-${{ runner.os }}-${{ runner.arch }}
-
-      - name: Build wxWidgets
-        if: steps.wxwidgets-cache.outputs.cache-hit != 'true'
-        run: |
-          export MAKEFLAGS=-j$(getconf _NPROCESSORS_ONLN)
-          vsn=${{ inputs.wxwidgets_version }}
-          curl --fail -LO https://github.com/wxWidgets/wxWidgets/releases/download/v$vsn/wxWidgets-$vsn.tar.bz2
-          tar -xf wxWidgets-$vsn.tar.bz2
-          mv wxWidgets-$vsn/ wxWidgets
-          cd wxWidgets
-          ./configure \
-            --disable-shared \
-            --prefix=$PWD/release \
-            --with-cocoa \
-            --with-macosx-version-min=10.15 \
-            --disable-sys-libs
-          make
-          make install
-
-      - name: Test wxWidgets
-        run: |
-          export PATH="$PWD/wxWidgets/release/bin:$PATH"
-          wx-config --libs
-
-      - name: Cache OTP
-        id: otp-cache
-        uses: actions/cache@v3
-        with:
-          path: otp
-          key: otp-${{ inputs.otp_version }}-${{ runner.os }}-${{ runner.arch }}
-
-      - name: Build OTP
-        if: steps.otp-cache.outputs.cache-hit != 'true'
-        run: |
-          export PATH="$PWD/wxWidgets/release/bin:$PATH"
-          export MAKEFLAGS=-j$(getconf _NPROCESSORS_ONLN)
-          vsn=${{ inputs.otp_version }}
-          curl --fail -LO https://github.com/erlang/otp/releases/download/OTP-$vsn/otp_src_$vsn.tar.gz
-          tar -xf otp_src_$vsn.tar.gz
-          mv otp_src_$vsn/ otp
-          cd otp
-          export ERL_TOP=`pwd`
-          export RELEASE_ROOT=$ERL_TOP/release
-          export ERLC_USE_SERVER=true
-
-          ./otp_build configure \
-            --with-ssl=$(brew --prefix openssl@1.1) \
-            --disable-dynamic-ssl-lib
-          ./otp_build boot -a
-          ./otp_build release -a $RELEASE_ROOT
-          make release_docs DOC_TARGETS=chunks
-          tar -czf ../otp.tar.gz -C release .
-
-      - name: Test OTP
-        run: |
-          cd otp/release
-          ./Install -sasl $PWD
-          ./bin/erl -noshell -eval 'io:format("~s", [erlang:system_info(system_version)]), halt().'
-          ./bin/erl -noshell -eval 'io:format("~s~n", [erlang:system_info(system_architecture)]), halt().'
-          ./bin/erl -noshell -eval 'ok = crypto:start(), io:format("crypto ok~n"), halt().'
-          ./bin/erl -noshell -eval '{wx_ref,_,_,_} = wx:new(), io:format("wx ok~n"), halt().'
-
-      - name: Upload OTP tarball
-        uses: actions/upload-artifact@v3
-        with:
-          name: otp_macos_${{ runner.arch }}
-          path: otp.tar.gz
+  build:
+    uses: wojtekmach/public_actions/.github/workflows/build.yml@main
+    with:
+      wxwidgets_version: "3.1.7"
+      otp_version: "25.0.3"
