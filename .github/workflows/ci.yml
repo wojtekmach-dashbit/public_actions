@@ -4,9 +4,13 @@ on:
 jobs:
   build-macos:
     runs-on: macos-lateest
-    env:
-      WXWIDGETS_VERSION: 3.1.7
-      OTP_VERSION: 25.0.3
+    inputs:
+      wxwidgets_version:
+        required: true
+        type: string
+      otp_version:
+        required: true
+        type: string
     steps:
       - uses: actions/checkout@v3
 
@@ -15,13 +19,13 @@ jobs:
         uses: actions/cache@v2
         with:
           path: wxWidgets
-          key: wxWidgets-${{ env.WXWIDGETS_VERSION }}-${{ runner.os }}-${{ runner.arch }}
+          key: wxWidgets-${{ inputs.wxwidgets_version }}-${{ runner.os }}-${{ runner.arch }}
 
       - name: Build wxWidgets
         if: steps.wxwidgets-cache.outputs.cache-hit != 'true'
         run: |
           export MAKEFLAGS=-j$(getconf _NPROCESSORS_ONLN)
-          vsn=$WXWIDGETS_VERSION
+          vsn=${{ inputs.wxwidgets_version }}
           curl --fail -LO https://github.com/wxWidgets/wxWidgets/releases/download/v$vsn/wxWidgets-$vsn.tar.bz2
           tar -xf wxWidgets-$vsn.tar.bz2
           mv wxWidgets-$vsn/ wxWidgets
@@ -44,7 +48,7 @@ jobs:
         run: |
           export PATH="$PWD/wxWidgets/release/bin:$PATH"
           export MAKEFLAGS=-j$(getconf _NPROCESSORS_ONLN)
-          vsn=$OTP_VERSION
+          vsn=${{ inputs.otp_version }}
           curl --fail -LO https://github.com/erlang/otp/releases/download/OTP-$vsn/otp_src_$vsn.tar.gz
           tar -xf otp_src_$vsn.tar.gz
           mv otp_src_$vsn/ otp
