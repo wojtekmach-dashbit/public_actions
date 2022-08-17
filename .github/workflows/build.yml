@@ -85,8 +85,8 @@ jobs:
           ./bin/erl -noshell -eval 'ok = crypto:start(), io:format("crypto ok~n"), halt().'
           ./bin/erl -noshell -eval '{wx_ref,_,_,_} = wx:new(), io:format("wx ok~n"), halt().'
 
-      - name: Upload OTP tarball
-        uses: actions/upload-artifact@v3
-        with:
-          name: otp_macos_${{ runner.arch }}
-          path: otp.tar.gz
+      # - name: Upload OTP tarball
+      #   uses: actions/upload-artifact@v3
+      #   with:
+      #     name: otp_macos_${{ runner.arch }}
+      #     path: otp.tar.gz
