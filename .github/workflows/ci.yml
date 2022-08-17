@@ -1,9 +1,6 @@
 name: CI
 on:
   workflow_call:
-jobs:
-  build-macos:
-    runs-on: macos-lateest
     inputs:
       wxwidgets_version:
         required: true
@@ -11,6 +8,9 @@ jobs:
       otp_version:
         required: true
         type: string
+jobs:
+  build-macos:
+    runs-on: self-hosted
     steps:
       - uses: actions/checkout@v3
 
