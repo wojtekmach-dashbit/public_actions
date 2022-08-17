@@ -12,7 +12,7 @@ jobs:
   build-macos:
     strategy:
       matrix:
-        runner: [self-hosted]
+        runner: [self-hosted, macos-12]
     runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v3
